@@ -1,12 +1,15 @@
 import _find from 'lodash/find'
 import _orderBy from 'lodash/orderBy'
 import Roudokuka from 'roudokuka'
+import pageAnalyzer from 'pageAnalyzer'
+import initializeHead from 'initializer/head'
 
 // global variables
 let options = undefined
 let dictionaries = undefined
 let rubies = []
 let lineIndex = 0
+let analyzer = new pageAnalyzer(window.location.hostname)
 
 const getDictionaryText = (rubies) => {
   let dictionaryText = ''
@@ -83,71 +86,32 @@ if($('#novel_honbun').length) {
       name: $('.contents1 .margin_r20').text()
     }}, (responseDictionaries) => {
 
+// 2 nested -------- start
 // start main --------
-
 options = responseOptions
 dictionaries = responseDictionaries
 
-$('head').append(`<link href='https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet' integrity='sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN' crossorigin='anonymous'>`)
-$('head').append(`<style id='novels-reader-style'>
-  .highlight {
-    color: ${options.textColor == undefined ? '#fff' : options.textColor};
-    background-color: ${options.backgroundColor == undefined ? '#498fd9' : options.backgroundColor};
-  }
+initializeHead(options)
 
-  .controll-button {
-    color: ${$('#novel_color').css('color')};
-    position: absolute;
-    cursor: pointer;
-  }
-  .controll-button:hover {
-    color: #18b7cd;
-  }
-
-  .controll-button .fa {
-    line-height: inherit;
-    font-size: 120%;
-  }
-
-  p.include-ruby .controll-button .fa {
-    margin-top: ${$('ruby rt').height()}px;
-    line-height: ${$('ruby rb').height()}px;
-  }
-
-  .controll-button.play {
-    margin-left: -25px;
-  }
-  .controll-button.stop {
-    position: fixed;
-    top: ${$('#novel_header').height() + 15}px;
-    left: 15px;
-    font-size: 30px;
-  }
-</style>`)
-
-let lineElements = {}
 let linesInfo = []
 
-const targetElements = {
-  title: $('.novel_subtitle'),
-  foreword: $('#novel_p p'),
-  body: $('#novel_honbun p'),
-  afterword: $('#novel_a p')
-}
-for(let key in targetElements) {
-  if(options[key] == 'on' && targetElements[key].length) {
-    let filteredElements = targetElements[key].filter((index, element) => {
+for(let key in analyzer.targetElements) {
+  if(options[key] == 'on' && analyzer.targetElements[key].length) {
+    let filteredElements = analyzer.targetElements[key].filter((index, element) => {
       return /\S/gi.test($(element).text())
     })
     setPlayButtonElementsAndSetRubyData(filteredElements)
     linesInfo = linesInfo.concat(getLinesInfo(filteredElements))
   }
 }
+// 2 nested -------- end
 
 chrome.runtime.sendMessage({method: 'saveDictionary', dictionary: {
   id: novelId,
   raw: options.autoSaveDictionary == 'on' ? getDictionaryText(rubies) : ''
 }}, (savedDictionary) => {
+
+// 3 nested -------- start
 dictionaries = savedDictionary
 
 let userRubies = dictionaries.user ? _orderBy(dictionaries.user.rubies, [function(r) { return r.rb.length; }], ['desc']) : false
@@ -215,12 +179,13 @@ roudokukaOptions.onLibrettoEnd = () => {
 }
 window.roudokuka = new Roudokuka(linesInfo, roudokukaOptions)
 
-window.roudokuka.onReady().then(() => {
-  if(options.autoPlay == 'on') {
-    lineHighlight(linesInfo[0].element)
-    window.roudokuka.start()
-  }
-})
+// window.roudokuka.onReady().then(() => {
+//   if(options.autoPlay == 'on') {
+//     lineHighlight(linesInfo[0].element)
+//     window.roudokuka.start()
+//   }
+// })
+// 3 nested -------- end
 
 })
 // end main --------

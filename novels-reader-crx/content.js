@@ -15600,7 +15600,70 @@ module.exports = createBaseEach;
 /***/ }),
 /* 159 */,
 /* 160 */,
-/* 161 */,
+/* 161 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var assignValue = __webpack_require__(48),
+    copyObject = __webpack_require__(47),
+    createAssigner = __webpack_require__(49),
+    isArrayLike = __webpack_require__(5),
+    isPrototype = __webpack_require__(16),
+    keys = __webpack_require__(8);
+
+/** Used for built-in method references. */
+var objectProto = Object.prototype;
+
+/** Used to check objects for own properties. */
+var hasOwnProperty = objectProto.hasOwnProperty;
+
+/**
+ * Assigns own enumerable string keyed properties of source objects to the
+ * destination object. Source objects are applied from left to right.
+ * Subsequent sources overwrite property assignments of previous sources.
+ *
+ * **Note:** This method mutates `object` and is loosely based on
+ * [`Object.assign`](https://mdn.io/Object/assign).
+ *
+ * @static
+ * @memberOf _
+ * @since 0.10.0
+ * @category Object
+ * @param {Object} object The destination object.
+ * @param {...Object} [sources] The source objects.
+ * @returns {Object} Returns `object`.
+ * @see _.assignIn
+ * @example
+ *
+ * function Foo() {
+ *   this.a = 1;
+ * }
+ *
+ * function Bar() {
+ *   this.c = 3;
+ * }
+ *
+ * Foo.prototype.b = 2;
+ * Bar.prototype.d = 4;
+ *
+ * _.assign({ 'a': 0 }, new Foo, new Bar);
+ * // => { 'a': 1, 'c': 3 }
+ */
+var assign = createAssigner(function(object, source) {
+  if (isPrototype(source) || isArrayLike(source)) {
+    copyObject(source, keys(source), object);
+    return;
+  }
+  for (var key in source) {
+    if (hasOwnProperty.call(source, key)) {
+      assignValue(object, key, source[key]);
+    }
+  }
+});
+
+module.exports = assign;
+
+
+/***/ }),
 /* 162 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -15619,6 +15682,14 @@ var _roudokuka = __webpack_require__(169);
 
 var _roudokuka2 = _interopRequireDefault(_roudokuka);
 
+var _pageAnalyzer = __webpack_require__(178);
+
+var _pageAnalyzer2 = _interopRequireDefault(_pageAnalyzer);
+
+var _head = __webpack_require__(182);
+
+var _head2 = _interopRequireDefault(_head);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // global variables
@@ -15626,6 +15697,7 @@ var options = undefined;
 var dictionaries = undefined;
 var rubies = [];
 var lineIndex = 0;
+var analyzer = new _pageAnalyzer2.default(window.location.hostname);
 
 var getDictionaryText = function getDictionaryText(rubies) {
   var dictionaryText = '';
@@ -15701,26 +15773,18 @@ if ($('#novel_honbun').length) {
         name: $('.contents1 .margin_r20').text()
       } }, function (responseDictionaries) {
 
+      // 2 nested -------- start
       // start main --------
-
       options = responseOptions;
       dictionaries = responseDictionaries;
 
-      $('head').append('<link href=\'https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\' rel=\'stylesheet\' integrity=\'sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN\' crossorigin=\'anonymous\'>');
-      $('head').append('<style id=\'novels-reader-style\'>\n  .highlight {\n    color: ' + (options.textColor == undefined ? '#fff' : options.textColor) + ';\n    background-color: ' + (options.backgroundColor == undefined ? '#498fd9' : options.backgroundColor) + ';\n  }\n\n  .controll-button {\n    color: ' + $('#novel_color').css('color') + ';\n    position: absolute;\n    cursor: pointer;\n  }\n  .controll-button:hover {\n    color: #18b7cd;\n  }\n\n  .controll-button .fa {\n    line-height: inherit;\n    font-size: 120%;\n  }\n\n  p.include-ruby .controll-button .fa {\n    margin-top: ' + $('ruby rt').height() + 'px;\n    line-height: ' + $('ruby rb').height() + 'px;\n  }\n\n  .controll-button.play {\n    margin-left: -25px;\n  }\n  .controll-button.stop {\n    position: fixed;\n    top: ' + ($('#novel_header').height() + 15) + 'px;\n    left: 15px;\n    font-size: 30px;\n  }\n</style>');
+      (0, _head2.default)(options);
 
-      var lineElements = {};
       var linesInfo = [];
 
-      var targetElements = {
-        title: $('.novel_subtitle'),
-        foreword: $('#novel_p p'),
-        body: $('#novel_honbun p'),
-        afterword: $('#novel_a p')
-      };
-      for (var key in targetElements) {
-        if (options[key] == 'on' && targetElements[key].length) {
-          var filteredElements = targetElements[key].filter(function (index, element) {
+      for (var key in analyzer.targetElements) {
+        if (options[key] == 'on' && analyzer.targetElements[key].length) {
+          var filteredElements = analyzer.targetElements[key].filter(function (index, element) {
             return (/\S/gi.test($(element).text())
             );
           });
@@ -15728,11 +15792,14 @@ if ($('#novel_honbun').length) {
           linesInfo = linesInfo.concat(getLinesInfo(filteredElements));
         }
       }
+      // 2 nested -------- end
 
       chrome.runtime.sendMessage({ method: 'saveDictionary', dictionary: {
           id: novelId,
           raw: options.autoSaveDictionary == 'on' ? getDictionaryText(rubies) : ''
         } }, function (savedDictionary) {
+
+        // 3 nested -------- start
         dictionaries = savedDictionary;
 
         var userRubies = dictionaries.user ? (0, _orderBy3.default)(dictionaries.user.rubies, [function (r) {
@@ -15804,12 +15871,13 @@ if ($('#novel_honbun').length) {
         };
         window.roudokuka = new _roudokuka2.default(linesInfo, roudokukaOptions);
 
-        window.roudokuka.onReady().then(function () {
-          if (options.autoPlay == 'on') {
-            lineHighlight(linesInfo[0].element);
-            window.roudokuka.start();
-          }
-        });
+        // window.roudokuka.onReady().then(() => {
+        //   if(options.autoPlay == 'on') {
+        //     lineHighlight(linesInfo[0].element)
+        //     window.roudokuka.start()
+        //   }
+        // })
+        // 3 nested -------- end
       });
       // end main --------
     });
@@ -16253,6 +16321,111 @@ class Libretto {
 /* harmony export (immutable) */ __webpack_exports__["a"] = Libretto;
 
 
+
+/***/ }),
+/* 171 */,
+/* 172 */,
+/* 173 */,
+/* 174 */,
+/* 175 */,
+/* 176 */,
+/* 177 */,
+/* 178 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _assign2 = __webpack_require__(161);
+
+var _assign3 = _interopRequireDefault(_assign2);
+
+var _narou = __webpack_require__(179);
+
+var _narou2 = _interopRequireDefault(_narou);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var PageAnalyzer = function () {
+  function PageAnalyzer(hostname) {
+    _classCallCheck(this, PageAnalyzer);
+
+    this.modules = [new _narou2.default()];
+    (0, _assign3.default)(this, this.getTargetModule(hostname));
+  }
+
+  _createClass(PageAnalyzer, [{
+    key: 'getTargetModule',
+    value: function getTargetModule(hostname) {
+      var targetModule = null;
+      this.modules.forEach(function (module) {
+        if (hostname === module.targetHostname) {
+          targetModule = module;
+        }
+      });
+      return targetModule;
+    }
+  }]);
+
+  return PageAnalyzer;
+}();
+
+exports.default = PageAnalyzer;
+
+/***/ }),
+/* 179 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Narou = function Narou() {
+  _classCallCheck(this, Narou);
+
+  this.targetHostname = 'ncode.syosetu.com';
+  this.targetElemtns = {
+    title: $('.novel_subtitle'),
+    foreword: $('#novel_p p'),
+    body: $('#novel_honbun p'),
+    afterword: $('#novel_a p')
+  };
+};
+
+exports.default = Narou;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(155)))
+
+/***/ }),
+/* 180 */,
+/* 181 */,
+/* 182 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = headInitializer;
+function headInitializer(options) {
+  $('head').append('<link href=\'https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css\' rel=\'stylesheet\' integrity=\'sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN\' crossorigin=\'anonymous\'>');
+  $('head').append('<style id=\'novels-reader-style\'>\n    .highlight {\n      color: ' + (options.textColor == undefined ? '#fff' : options.textColor) + ';\n      background-color: ' + (options.backgroundColor == undefined ? '#498fd9' : options.backgroundColor) + ';\n    }\n\n    .controll-button {\n      color: ' + $('#novel_color').css('color') + ';\n      position: absolute;\n      cursor: pointer;\n    }\n    .controll-button:hover {\n      color: #18b7cd;\n    }\n\n    .controll-button .fa {\n      line-height: inherit;\n      font-size: 120%;\n    }\n\n    p.include-ruby .controll-button .fa {\n      margin-top: ' + $('ruby rt').height() + 'px;\n      line-height: ' + $('ruby rb').height() + 'px;\n    }\n\n    .controll-button.play {\n      margin-left: -25px;\n    }\n    .controll-button.stop {\n      position: fixed;\n      top: ' + ($('#novel_header').height() + 15) + 'px;\n      left: 15px;\n      font-size: 30px;\n    }\n  </style>');
+}
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(155)))
 
 /***/ })
 /******/ ]);
