@@ -1,5 +1,6 @@
 import _find from 'lodash/find'
 import _orderBy from 'lodash/orderBy'
+import _zipWith from 'lodash/zipWith'
 import Roudokuka from 'roudokuka'
 
 // global variables
@@ -171,6 +172,14 @@ if(novelRubies) {
   })
 }
 
+// kuromojiによる形態素解析結果の発音に変換
+let linesInfoForMessage = linesInfo.map(info => ({text: info.text}))
+chrome.runtime.sendMessage({method: 'runKuromoji', linesInfo: linesInfoForMessage}, (convertedInfo) => {
+
+
+// kuromoji による発音を、linesInfoに適用
+_zipWith(linesInfo, convertedInfo, (l, r) => l.text = r.text)
+
 $('.controll-button.play').on('click', (e) => {
   let targetPlayButton = $(e.currentTarget)
   lineUnHighlight()
@@ -222,6 +231,7 @@ window.roudokuka.onReady().then(() => {
   }
 })
 
+})
 })
 // end main --------
 

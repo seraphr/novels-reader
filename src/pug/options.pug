@@ -176,3 +176,14 @@ html
                 p 下記のボタンをクリックする事で、小説別辞書を編集する事が出来ます。小説別辞書は、この拡張機能を有効にした状態で、各小説ページを開くと自動で作成されます。
 
             #novels-dictionary
+        .columns
+          .column
+            .title kuromoji.js
+            form.options
+              .columns
+                .column
+                  .field
+                    .control
+                      label.checkbox
+                        input(name='enableKuromoji' type='checkbox')
+                        |  kuromoji.jsによる形態素解析を行う

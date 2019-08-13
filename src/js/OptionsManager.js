@@ -10,7 +10,8 @@ export default class OptionsManager {
       body: "on",
       autoPlay: "on",
       autoMoveNext: "on",
-      autoSaveDictionary: "on"
+      autoSaveDictionary: "on",
+      enableKuromoji: "on"
     }
   }
 

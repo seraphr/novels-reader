@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "novels-reader",
+  "name": "novels-reader-kuromoji",
   "version": "1.2.0",
   "description": "Webpage reader for http://syosetu.com",
   "content_scripts": [
