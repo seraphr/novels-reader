@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "jquery": "^3.2.1",
+    "kuromoji": "^0.1.2",
     "roudokuka": "^0.1.2"
   }
 }
